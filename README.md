@@ -8,33 +8,33 @@ number N has a frequency of 1/N.
 Thus the most frequent word will occur about twice as often as the second most
 frequent word, three times as often as the third most frequent word, etc
 
-# Use #
+## Use ##
 Look how easy it is to use:
 
     ./zipffy afile.txt
 
-# Features #
+## Features ##
 - Reads in any text file
 - Displays Zipf's Law visually
 
-# Installationv#
+## Installation ##
 Doesn't need installation. Either compile yourself and run or run the included
 binary:
 
     ./zippfy afile.txt
 
-## Or ##
+### Or ###
 
     make zipffy
     ./zippfy afile.txt
 
-# Contribute #
+## Contribute ##
 - Issue Tracker: github.com/histamineblkr/Zipffy/issues
 - Source Code: github.com/histamineblkr/Zipffy
 
-# Support #
+## Support ##
 If you are having issues, please let me know.
 We have a mailing list located at: zipffy@gmail.com
 
-# License #
+## License ##
 The project is licensed under the GPLV3 license.
