@@ -6,27 +6,17 @@ word is inversely proportional to its rank in the frequency table. So word
 number N has a frequency of 1/N.
 
 Thus the most frequent word will occur about twice as often as the second most
-frequent word, three times as often as the third most frequent word, etc
+frequent word, three times as often as the third most frequent word, etc.
 
-## Use ##
-Look how easy it is to use:
+## Make ##
+Doesn't need installation. Compile yourself and run from the **dist/** folder:
 
-    ./zipffy afile.txt
+    make zipffy
+    dist/zippfy afile.txt
 
 ## Features ##
 - Reads in any text file
 - Displays Zipf's Law visually
-
-## Installation ##
-Doesn't need installation. Either compile yourself and run or run the included
-binary:
-
-    ./zippfy afile.txt
-
-### Or ###
-
-    make zipffy
-    ./zippfy afile.txt
 
 ## Contribute ##
 - Issue Tracker: github.com/histamineblkr/Zipffy/issues

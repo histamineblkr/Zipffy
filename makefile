@@ -1,11 +1,27 @@
-#zipffy: src/zipffy.c
-#	gcc -o dist/zipffy src/zipffy.c -I.
+vpath %.c src
+vpath %.h src
+vpath %.o obj
+CC=gcc
+OBJDIR=obj
+DISTDIR=dist
 
-zipffy : zipffy.o
-				gcc -o dist/zipffy zipffy.o
 
-zipffy.o : src/zipffy.c
-				gcc -c src/zipffy.c
+objects = $(addprefix $(OBJDIR)/, zipffy.o)
+dist = $(addprefix $(DISTDIR))
+
+zipffy : $(objects)
+				$(CC) -o $(DISTDIR)/zipffy $(objects)
+
+#    $@        $<
+#     |         |
+#     V         V
+$(OBJDIR)/%.o: %.c
+				$(CC) -o $@ -c $<
+
+$(OBJDIR) :
+				mkdir $(OBJDIR)
+
+.PHONY : clean
 
 clean :
-				rm dist/zipffy zipffy.o
+				rm $(DISTDIR)/* $(objects)
