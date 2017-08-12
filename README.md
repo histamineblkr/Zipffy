@@ -18,6 +18,10 @@ Doesn't need installation. Compile yourself and run from the **dist/** folder:
 - Reads in any text file
 - Displays Zipf's Law visually
 
+## Considerations ##
+- How to handle contractions: i.e. "it's"?
+ - Count as single word "it's" or count as two: "it" and "is"?
+
 ## Contribute ##
 - Issue Tracker: github.com/histamineblkr/Zipffy/issues
 - Source Code: github.com/histamineblkr/Zipffy

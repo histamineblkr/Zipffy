@@ -104,9 +104,12 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Open file pointer
+    
+
     /******* Begin Zipfs Law Computation ********/
 
-    // Hash
+    // Hash !!!!!! Example using passed in string file !!!!!!!
     unsigned long hash_output = hash(argv[1]);
 
     // Display output
