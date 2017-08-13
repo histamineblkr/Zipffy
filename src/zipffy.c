@@ -32,12 +32,13 @@ unsigned long hash(unsigned char *str)
     return hash;
 }
 
-/* Quick and dirty check for file passed in ending in .txt
-   Does not actually guarantee that the file is text.
-
-   @returns: boolean true if file ends in ".txt", false if not
-
-   TODO: Better text file checking.
+/*
+ * Quick and dirty check for file passed in ending in .txt
+ * Does not actually guarantee that the file is text.
+ *
+ * @returns: boolean true if file ends in ".txt", false if not
+ *
+ * TODO: Better text file checking.
  */
 bool isTextFile(char* fname)
 {
@@ -60,14 +61,14 @@ bool isTextFile(char* fname)
     reti = regexec(&regex, filename, 0, NULL, 0);
     if (!reti)
     {
-        puts("Match");
+        fprintf(stdout, "File appears to be a text file.\n");
         // Free compiled regular expression
         regfree(&regex);
         return true;
     }
     else if (reti == REG_NOMATCH)
     {
-        puts("No match");
+        fprintf(stderr, "File does not appear to be a text file.\n");
         // Free compiled regular expression
         regfree(&regex);
         return false;
@@ -82,6 +83,19 @@ bool isTextFile(char* fname)
         exit(1);
     }
 }
+
+/*
+ * Process file. Tokenize each line and process each word.
+ *
+ * @returns:
+ *
+ * TODO: Process file.
+ */
+void zipfTextFile(FILE* textFp)
+{
+
+}
+
 
 // Main
 int main(int argc, char* argv[])
@@ -99,13 +113,29 @@ int main(int argc, char* argv[])
     {
         if (!isTextFile(argv[1]))
         {
-            fprintf(stderr, "Please pass in a text file in argument 1.\n");
+            fprintf(stderr, "Please pass in a text file.\n");
             exit(-1);
         }
     }
 
-    // Open file pointer
-    
+    // Open file for reading
+    FILE* fp = fopen(argv[1], "r+");
+
+    // If fp is NULL, file does not exist
+    if (fp == 0)
+    {
+        fprintf(stderr, "File does not exist.\n");
+        exit(1);
+    }
+    fprintf(stdout, "File exists.\n");
+
+    // Close file pointer
+    if (fclose(fp) != 0)
+    {
+        fprintf(stderr, "File did not close.\n");
+    }
+    fprintf(stdout, "File closed.\n");
+
 
     /******* Begin Zipfs Law Computation ********/
 
@@ -114,7 +144,7 @@ int main(int argc, char* argv[])
 
     // Display output
     fprintf(stdout, "argument 1: %s\n", argv[1]);
-    fprintf(stdout, "hash: %d\n", hash_output);
+    fprintf(stdout, "hash of argv[1]: %d\n", hash_output);
 
     return 0;
 }
