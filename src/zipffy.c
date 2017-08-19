@@ -124,11 +124,6 @@ char* getWord(char* line, int* idx)
         {
             word[wordIdx++] = tolower(line[*idx]);
         }
-        /*else if (ispunct(line[*idx]))
-        {
-            // skip punct, maybe return word
-            //*idx = (*idx + 1);
-        }*/
         else if (isspace(line[*idx]))
         {
             *idx += 1;
@@ -145,7 +140,7 @@ char* getWord(char* line, int* idx)
  *
  * TODO: Process file.
  */
-void processFile(FILE* textFp)
+void processFile(FILE* textFp, int* numOfWords)
 {
     // Variables to hold:
     //   a line for text
@@ -162,15 +157,22 @@ void processFile(FILE* textFp)
     while (fgets(line, sizeof(line), textFp))
     {
         // Get line character Count
-        int m;
-        int charcount;
+        int m = 0;
+        int charcount = 0;
+        int wordCount = 1;
 
-        charcount = 0;
         for(m = 0; line[m]; m++)
         {
+            // By counting spaces, you can get a rough estimate of how many words
+            // are in each line. (totalSpaces + 1)
+            if ((line[m] == ' ') && (line[m-1] != ' '))
+            {
+                 wordCount++;
+            }
+
             if(line[m] != '\n')
             {
-                charcount ++;
+                charcount++;
             }
             else
             {
@@ -178,9 +180,14 @@ void processFile(FILE* textFp)
             }
         }
 
+        // Update word total
+        *numOfWords += wordCount;
+
         if (DEBUG == true)
         {
             fprintf(stdout, "line %d:\n", lineCount);
+            fprintf(stdout, "  words in line: %d\n", wordCount);
+            fprintf(stdout, "  total words: %d\n", *numOfWords);
             fprintf(stdout, "  charcount: %d\n", charcount);
             fprintf(stdout, "  lineIdx: %d\n", *lineIdx);
             fprintf(stdout, "  value: \"%s\"\n\n", line);
@@ -280,7 +287,9 @@ int main (int argc, char* argv[])
     }
 
     // Process text file for zipfs law and hashing
-    processFile(fp);
+    int* wordTotal = (int*) malloc(sizeof(int));
+    *wordTotal = 0;
+    processFile(fp, wordTotal);
 
     // Close file pointer
     if (fclose(fp) != 0)
@@ -305,6 +314,15 @@ int main (int argc, char* argv[])
     fprintf(stdout, "+++++++++++++++++++++++++++++++++++++++\n");
     fprintf(stdout, "+           Zipfs Output Below        +\n");
     fprintf(stdout, "+++++++++++++++++++++++++++++++++++++++\n\n");
+
+    fprintf(stdout, "Total Number of Words: %d\n", *wordTotal);
+
+
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  //        FREE ALL MEMORY THAT HASN'T BEEN FREED YET
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    free(wordTotal);
 
     exit(0);
 }
