@@ -18,19 +18,24 @@ Compile yourself and run from the **dist/** folder:
     make
     dist/zippfy file.txt
 
+Alternatively you can run in a debug mode:
+
+    dist/zippfy file.txt -d
+
 ## Features ##
-- Reads in any text file
+- Reads in a text file
 - Displays Zipf's Law visually
 
 ## Considerations ##
-- Uses the djb2 hash [here](http://www.cse.yorku.ca/~oz/hash.html) 
+- Uses the djb2 hash [here](http://www.cse.yorku.ca/~oz/hash.html)
 - Assumes English language and longest word is: "pneumonoultramicroscopicsilicovolcanoconiosis" (46 Characters)
 - How to handle contractions: i.e. "it's"?
-    - Count as single word "it's" or count as two: "it" and "is"?
+    - Count as a single word "it's" or count as two: "it" and "is"?
+    - Program chooses the latter and discards the apostrophe. Yes I realize that "its" and "it's" are two different words, one a possesive form of "it" and the other a contraction of "it" and "is", but for now I am choosing to treat those as the same and will later implement a way of distinguishing between the two.
 
 ## Contribute ##
-- Issue Tracker: github.com/histamineblkr/Zipffy/issues
 - Source Code: github.com/histamineblkr/Zipffy
+- Issue Tracker: github.com/histamineblkr/Zipffy/issues
 
 ## Support ##
 If you are having issues, please let me know.
