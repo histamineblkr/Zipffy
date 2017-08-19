@@ -12,6 +12,8 @@
  * Version: 1.0
  *
  */
+
+// Includes for program to run
 #include <stdio.h>
 #include <stdlib.h>
 #include <regex.h>
@@ -21,7 +23,22 @@
 #include <ctype.h>
 #include <string.h>
 
-/* A simple hash function sourced online.
+// Global debug
+bool DEBUG = false;
+
+/*
+ * A structure to hold each work, its hash key, and count.
+ *
+ */
+struct HashWords
+{
+    char string_word[50];
+    int key;
+    int count;
+};
+
+
+/* A djb2 hash function sourced online.
  */
 unsigned long hash(unsigned char *str)
 {
@@ -55,7 +72,7 @@ bool isTextFile(char* fname)
 
     if (reti)
     {
-        fprintf(stderr, "Could not compile regex\n");
+        fprintf(stderr, "Could not compile regex.\n");
         exit(1);
     }
 
@@ -63,22 +80,19 @@ bool isTextFile(char* fname)
     reti = regexec(&regex, filename, 0, NULL, 0);
     if (!reti)
     {
-        fprintf(stdout, "File appears to be a text file.\n");
-        // Free compiled regular expression
+        if (DEBUG == true) { fprintf(stdout, "File appears to be a text file.\n"); }
         regfree(&regex);
         return true;
     }
     else if (reti == REG_NOMATCH)
     {
         fprintf(stderr, "File does not appear to be a text file.\n");
-        // Free compiled regular expression
         regfree(&regex);
         return false;
     }
     else
     {
         regerror(reti, &regex, msgbuf, sizeof(msgbuf));
-        // Free compiled regular expression
         regfree(&regex);
         fprintf(stderr, "A Regex match error occured: %s\n", msgbuf);
         fprintf(stderr, "Exiting.\n");
@@ -104,26 +118,19 @@ char* getWord(char* line, int* idx)
         word[i] = '\0';
     }
 
-    for (; line[*idx] != '\n'; *idx = (*idx + 1))
+    for (; line[*idx] != '\0'; *idx = (*idx + 1))
     {
         if (isalpha(line[*idx]) || (line[*idx] == '-'))
         {
-            //fprintf(stdout, "%c", line[*idx]);
             word[wordIdx++] = tolower(line[*idx]);
-            //fprintf(stdout, "line[%d]: %c\n", *idx, line[*idx]);
         }
-        else if (ispunct(line[*idx]))
+        /*else if (ispunct(line[*idx]))
         {
             // skip punct, maybe return word
             //*idx = (*idx + 1);
-        }
+        }*/
         else if (isspace(line[*idx]))
         {
-            // Set word terminator
-            /*word[++wordIdx] = '\0';
-            fprintf(stdout, "%s:\t\t", word);
-            unsigned long hash_output = hash(word);
-            fprintf(stdout, "%d\n", hash_output);*/
             *idx += 1;
             return strdup(word);
         }
@@ -136,19 +143,18 @@ char* getWord(char* line, int* idx)
 /*
  * Process file. Tokenize each line and process each word.
  *
- * @returns:
- *
  * TODO: Process file.
  */
 void processFile(FILE* textFp)
 {
     // Variables to hold:
-    // a line for text
-    // a word once it is parsed
-    // and an index to keep track of the line
+    //   a line for text
+    //   a word once it is parsed
+    //   an index to keep track of the line
     char line[256];
     char* word = (char*) malloc(sizeof(char));
     int* lineIdx = (int*) malloc(sizeof(int));
+    int lineCount = 1;
 
     // Set the line index to keep track of the line
     *lineIdx = 0;
@@ -166,29 +172,39 @@ void processFile(FILE* textFp)
             {
                 charcount ++;
             }
+            else
+            {
+                line[m] = '\0';
+            }
         }
 
-        fprintf(stdout, "line: %s", line);
-        fprintf(stdout, "charcount: %d\n", charcount);
-        fprintf(stdout, "lineIdx: %d\n", *lineIdx);
+        if (DEBUG == true)
+        {
+            fprintf(stdout, "line %d:\n", lineCount);
+            fprintf(stdout, "  charcount: %d\n", charcount);
+            fprintf(stdout, "  lineIdx: %d\n", *lineIdx);
+            fprintf(stdout, "  value: \"%s\"\n\n", line);
+        }
 
         // Get word
         while (*lineIdx < (charcount - 1))
-        //int c = 0;
-        //while (c < 3)
         {
             word = getWord(line, lineIdx);
-            fprintf(stdout, "After getting word: %s\n", word);
             unsigned long hash_output = hash(word);
-            fprintf(stdout, "hash of word: %d\n", hash_output);
-            fprintf(stdout, "lineIdx: %d\n", *lineIdx);
-            //c++;
+
+            if (DEBUG == true)
+            {
+                fprintf(stdout, "getWord(): %8s,\t", word);
+                fprintf(stdout, "hash(): %10d,\t", hash_output);
+                fprintf(stdout, "lineIdx: %2d\n", *lineIdx);
+            }
         }
 
-        fprintf(stdout, "\n=====\n\n");
+        if (DEBUG == true) { fprintf(stdout, "\n========\n\n"); }
 
         // Reset line index to 0 for new line
         *lineIdx = 0;
+        lineCount++;
     }
 
     // Free pointers
@@ -198,8 +214,11 @@ void processFile(FILE* textFp)
 
 
 // Main
-int main(int argc, char* argv[])
+int main (int argc, char* argv[])
 {
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  //        VERIFY COMMAND LINE ARGUMENTS NECESSARY FOR PROGRAM
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     // User did not pass in any argument
     if (argc == 1)
@@ -208,8 +227,8 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    // User passed in at least one argument, take first argument and ignore rest
-    if (argc >= 2)
+    // User passed text file hopefully,
+    if (argc == 2)
     {
         if (!isTextFile(argv[1]))
         {
@@ -217,6 +236,30 @@ int main(int argc, char* argv[])
             exit(-1);
         }
     }
+
+    // Grab text file, possibly turn on debug, and ignore other arguments
+    if (argc >= 3)
+    {
+        // For debug purposes
+        if (strcmp("-d", argv[2]) == 0)
+        {
+            DEBUG = true;
+            fprintf(stdout, "+++++++++++++++++++++++++++++++++++++++\n");
+            fprintf(stdout, "+            [DEBUGGING ON]           +\n");
+            fprintf(stdout, "+++++++++++++++++++++++++++++++++++++++\n\n");
+        }
+
+        if (!isTextFile(argv[1]))
+        {
+            fprintf(stderr, "Please pass in a text file.\n");
+            exit(-1);
+        }
+    }
+
+
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  //        PROCESS PASSED IN TEXT FILE
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     // Open file for reading
     FILE* fp = fopen(argv[1], "r+");
@@ -227,34 +270,41 @@ int main(int argc, char* argv[])
         fprintf(stderr, "File does not exist.\n");
         exit(1);
     }
-    fprintf(stdout, "File exists.\n");
 
+    if (DEBUG == true) { fprintf(stdout, "File exists.\n"); }
 
-    /************* Process File *******************/
-    fprintf(stdout, "\n");
-    fprintf(stdout, "=====================================\n");
+    if (DEBUG == true)
+    {
+        fprintf(stdout, "\n");
+        fprintf(stdout, "================================================================================\n");
+    }
 
+    // Process text file for zipfs law and hashing
     processFile(fp);
-
-    fprintf(stdout, "=====================================\n");
-    fprintf(stdout, "\n");
 
     // Close file pointer
     if (fclose(fp) != 0)
     {
         fprintf(stderr, "File did not close.\n");
     }
-    fprintf(stdout, "File closed.\n");
+
+    if (DEBUG == true) { fprintf(stdout, "File closed.\n"); }
+
+    if (DEBUG == true)
+    {
+        fprintf(stdout, "================================================================================\n");
+
+        fprintf(stdout, "\n");
+    }
 
 
-    /******* Begin Zipfs Law Computation ********/
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  //        DISPLAY ZIPFS LAW OUTPUT
+  //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    // Hash !!!!!! Example using passed in string file !!!!!!!
-    unsigned long hash_output = hash(argv[1]);
+    fprintf(stdout, "+++++++++++++++++++++++++++++++++++++++\n");
+    fprintf(stdout, "+           Zipfs Output Below        +\n");
+    fprintf(stdout, "+++++++++++++++++++++++++++++++++++++++\n\n");
 
-    // Display output
-    fprintf(stdout, "argument 1: %s\n", argv[1]);
-    fprintf(stdout, "hash of argv[1]: %d\n", hash_output);
-
-    return 0;
+    exit(0);
 }
