@@ -18,6 +18,8 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <regex.h>
+#include <ctype.h>
+#include <string.h>
 
 /* A simple hash function sourced online.
  */
@@ -85,15 +87,113 @@ bool isTextFile(char* fname)
 }
 
 /*
+ * Using a file pointer, get the first word and then pass a copy of the word
+ * back
+ *
+ * @returns: a string
+ *
+ */
+char* getWord(char* line, int* idx)
+{
+    char word[50] = "word123";
+    int wordIdx = 0;
+
+    // Sanitize word
+    for (int i = 0; i < 50; i++)
+    {
+        word[i] = '\0';
+    }
+
+    for (; line[*idx] != '\n'; *idx = (*idx + 1))
+    {
+        if (isalpha(line[*idx]) || (line[*idx] == '-'))
+        {
+            //fprintf(stdout, "%c", line[*idx]);
+            word[wordIdx++] = tolower(line[*idx]);
+            //fprintf(stdout, "line[%d]: %c\n", *idx, line[*idx]);
+        }
+        else if (ispunct(line[*idx]))
+        {
+            // skip punct, maybe return word
+            //*idx = (*idx + 1);
+        }
+        else if (isspace(line[*idx]))
+        {
+            // Set word terminator
+            /*word[++wordIdx] = '\0';
+            fprintf(stdout, "%s:\t\t", word);
+            unsigned long hash_output = hash(word);
+            fprintf(stdout, "%d\n", hash_output);*/
+            *idx += 1;
+            return strdup(word);
+        }
+    }
+
+    *idx += 1;
+    return strdup(word);
+}
+
+/*
  * Process file. Tokenize each line and process each word.
  *
  * @returns:
  *
  * TODO: Process file.
  */
-void zipfTextFile(FILE* textFp)
+void processFile(FILE* textFp)
 {
+    // Variables to hold:
+    // a line for text
+    // a word once it is parsed
+    // and an index to keep track of the line
+    char line[256];
+    char* word = (char*) malloc(sizeof(char));
+    int* lineIdx = (int*) malloc(sizeof(int));
 
+    // Set the line index to keep track of the line
+    *lineIdx = 0;
+
+    while (fgets(line, sizeof(line), textFp))
+    {
+        // Get line character Count
+        int m;
+        int charcount;
+
+        charcount = 0;
+        for(m = 0; line[m]; m++)
+        {
+            if(line[m] != '\n')
+            {
+                charcount ++;
+            }
+        }
+
+        fprintf(stdout, "line: %s", line);
+        fprintf(stdout, "charcount: %d\n", charcount);
+        fprintf(stdout, "lineIdx: %d\n", *lineIdx);
+
+        // Get word
+        while (*lineIdx < (charcount - 1))
+        //int c = 0;
+        //while (c < 3)
+        {
+            word = getWord(line, lineIdx);
+            fprintf(stdout, "After getting word: %s\n", word);
+            unsigned long hash_output = hash(word);
+            fprintf(stdout, "hash of word: %d\n", hash_output);
+            fprintf(stdout, "lineIdx: %d\n", *lineIdx);
+            //c++;
+        }
+
+        fprintf(stdout, "\n=====\n\n");
+
+        // Reset line index to 0 for new line
+        *lineIdx = 0;
+    }
+
+    // Free pointers
+    free(lineIdx);
+    free(word);
 }
 
 
@@ -128,6 +228,16 @@ int main(int argc, char* argv[])
         exit(1);
     }
     fprintf(stdout, "File exists.\n");
+
+
+    /************* Process File *******************/
+    fprintf(stdout, "\n");
+    fprintf(stdout, "=====================================\n");
+
+    processFile(fp);
+
+    fprintf(stdout, "=====================================\n");
+    fprintf(stdout, "\n");
 
     // Close file pointer
     if (fclose(fp) != 0)

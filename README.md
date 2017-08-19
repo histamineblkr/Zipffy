@@ -19,8 +19,9 @@ Doesn't need installation. Compile yourself and run from the **dist/** folder:
 - Displays Zipf's Law visually
 
 ## Considerations ##
+- Assumes English language and longest word is: "pneumonoultramicroscopicsilicovolcanoconiosis" (46 Characters)
 - How to handle contractions: i.e. "it's"?
- - Count as single word "it's" or count as two: "it" and "is"?
+    - Count as single word "it's" or count as two: "it" and "is"?
 
 ## Contribute ##
 - Issue Tracker: github.com/histamineblkr/Zipffy/issues
