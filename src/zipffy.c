@@ -22,6 +22,7 @@
 #include <regex.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
 
 // Global debug
 bool DEBUG = false;
@@ -32,7 +33,7 @@ bool DEBUG = false;
  */
 struct HashWords
 {
-    char string_word[50];
+    char word[50];
     int key;
     int count;
 };
@@ -104,20 +105,15 @@ bool isTextFile(char* fname)
  * Using a file pointer, get the first word and then pass a copy of the word
  * back
  *
- * @returns: a string
+ * @returns: a boolean of true when word is built
  *
  */
-char* getWord(char* line, int* idx)
+//char* getWord(char* line, int* idx)
+bool getWord(char* line, int* idx, char* word)
 {
-    char word[50] = "word123";
     int wordIdx = 0;
 
-    // Sanitize word
-    for (int i = 0; i < 50; i++)
-    {
-        word[i] = '\0';
-    }
-
+    // Build word character by character
     for (; line[*idx] != '\0'; *idx = (*idx + 1))
     {
         if (isalpha(line[*idx]) || (line[*idx] == '-'))
@@ -127,12 +123,11 @@ char* getWord(char* line, int* idx)
         else if (isspace(line[*idx]))
         {
             *idx += 1;
-            return strdup(word);
+            return true;
         }
     }
 
-    *idx += 1;
-    return strdup(word);
+    return true;
 }
 
 /*
@@ -147,7 +142,7 @@ void processFile(FILE* textFp, int* numOfWords)
     //   a word once it is parsed
     //   an index to keep track of the line
     char line[256];
-    char* word = (char*) malloc(sizeof(char));
+    unsigned char* word = (unsigned char*) malloc(sizeof(char) * 50);
     int* lineIdx = (int*) malloc(sizeof(int));
     int lineCount = 1;
 
@@ -183,6 +178,9 @@ void processFile(FILE* textFp, int* numOfWords)
         // Update word total
         *numOfWords += wordCount;
 
+        // Create hash structure
+        struct HashWords HashWord;
+
         if (DEBUG == true)
         {
             fprintf(stdout, "line %d:\n", lineCount);
@@ -196,13 +194,22 @@ void processFile(FILE* textFp, int* numOfWords)
         // Get word
         while (*lineIdx < (charcount - 1))
         {
-            word = getWord(line, lineIdx);
+            // Sanitize word
+            for (int i = 0; i < 50; i++)
+            {
+                word[i] = '\0';
+            }
+
+            getWord(line, lineIdx, word);
             unsigned long hash_output = hash(word);
+
+            strcpy(HashWord.word, word);
+            HashWord.key = hash_output;
 
             if (DEBUG == true)
             {
-                fprintf(stdout, "getWord(): %8s,\t", word);
-                fprintf(stdout, "hash(): %10d,\t", hash_output);
+                fprintf(stdout, "getWord(): %8s,\t", HashWord.word);
+                fprintf(stdout, "hash(): %10d,\t", HashWord.key);
                 fprintf(stdout, "lineIdx: %2d\n", *lineIdx);
             }
         }
