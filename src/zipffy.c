@@ -19,38 +19,33 @@
 #include <regex.h>
 #include <stdbool.h>
 #include <sys/types.h>
-#include <regex.h>
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>
 
+// Self written includes for project
+#include "wordcount.h"
+#include "hash.h"
+
 // Global debug
 bool DEBUG = false;
+
+// Constants
+static const int WORD_SIZE = 50;
+static const int LINE_SIZE = 1024;
+static const int MSG_SIZE = 1024;
+static const int HASHTABLE_SIZE = 1300051;
 
 /*
  * A structure to hold each work, its hash key, and count.
  *
  */
-struct HashWords
+/*struct HashWords
 {
-    char word[50];
+    char value[50];
     int key;
     int count;
-};
-
-
-/* A djb2 hash function sourced online.
- */
-unsigned long hash(unsigned char *str)
-{
-    unsigned long hash = 5381;
-    int c;
-
-    while (c = *str++)
-    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-
-    return hash;
-}
+};*/
 
 /*
  * Quick and dirty check for file passed in ending in .txt
@@ -60,11 +55,11 @@ unsigned long hash(unsigned char *str)
  *
  * TODO: Better text file checking.
  */
-bool isTextFile(char* fname)
+static bool isTextFile(char* fname)
 {
     regex_t regex;
     int reti;
-    char msgbuf[100];
+    char msgbuf[MSG_SIZE];
     char* filename = fname;
     char* filenameRegex = ".txt$";
 
@@ -102,20 +97,90 @@ bool isTextFile(char* fname)
 }
 
 /*
+ * Count all characters in a line and strip the newline or linefeed (\r, \n))
+ * and replace with \0
+ *
+ * @returns: an integer   the character count
+ *
+ */
+static int countCharsAndStripNewline(char* line)
+{
+    int charCount = 0;
+
+    while ((line[charCount] != '\n' && line[charCount] != '\r'))
+    {
+        charCount++;
+    }
+
+    line[charCount] = '\0';
+
+    return charCount;
+}
+
+/*
+ * Count all words in a line
+ *
+ * @returns: an integer   the word count
+ *
+ */
+static int countWordsInLine(char* line)
+{
+    int wordCount = 1;
+
+    if (   strcmp(" ",  line)
+        || strcmp("\0", line)
+        || strcmp("\n", line)
+        || strcmp("\r", line) )
+    {
+        return wordCount = 0;
+    }
+
+    for (int m = 0; line[m] != '\0'; m++)
+    {
+        if ((line[m] == ' ' && m != 0) && (line[m - 1] != ' '))
+        {
+            wordCount++;
+        }
+    }
+
+    return wordCount;
+}
+
+/*
+ * Clean word and or initialize
+ *
+ */
+static void sanitizeWord(char* word)
+{
+    for (int i = 0; i < WORD_SIZE; i++)
+    {
+        word[i] = '\0';
+    }
+}
+
+/*
  * Using a file pointer, get the first word and then pass a copy of the word
  * back
  *
  * @returns: a boolean of true when word is built
  *
+ * TODO: Find issue in here causing memory error
  */
-//char* getWord(char* line, int* idx)
-bool getWord(char* line, int* idx, char* word)
+static bool getWord(char* line, int* idx, char* word)
 {
     int wordIdx = 0;
 
     // Build word character by character
-    for (; line[*idx] != '\0'; *idx = (*idx + 1))
+    for ( ; (line[*idx] != '\0' && wordIdx < WORD_SIZE); *idx = (*idx + 1))
     {
+        // Hit word size limit
+        if (wordIdx == (WORD_SIZE - 1))
+        {
+            word[wordIdx] = '\0';
+            *idx += 1;
+            return true;
+        }
+
         if (isalpha(line[*idx]) || (line[*idx] == '-'))
         {
             word[wordIdx++] = tolower(line[*idx]);
@@ -135,95 +200,77 @@ bool getWord(char* line, int* idx, char* word)
  *
  * TODO: Process file.
  */
-void processFile(FILE* textFp, int* numOfWords)
+static void processFile(FILE* textFp, hashtable_t* hashtable)
 {
-    // Variables to hold:
-    //   a line for text
-    //   a word once it is parsed
-    //   an index to keep track of the line
-    char line[256];
-    unsigned char* word = (unsigned char*) malloc(sizeof(char) * 50);
+    char line[LINE_SIZE];
+    //unsigned char word[WORD_SIZE];
+    char* word = malloc(sizeof(char) * 50);
     int* lineIdx = (int*) malloc(sizeof(int));
     int lineCount = 1;
+
+    // Intialize memory for char arrays
+    //memset(word, '\0', (WORD_SIZE * sizeof(unsigned char)));
+    strcpy(word, "");
 
     // Set the line index to keep track of the line
     *lineIdx = 0;
 
-    while (fgets(line, sizeof(line), textFp))
+    while (fgets(line, sizeof(line), textFp) != NULL)
     {
-        // Get line character Count
-        int m = 0;
-        int charcount = 0;
-        int wordCount = 1;
+        if (strcmp("",   line) == 0) { continue; }
+        if (strcmp(" ",  line) == 0) { continue; }
+        if (strcmp("\0", line) == 0) { continue; }
+        if (strcmp("\n", line) == 0) { continue; }
+        if (strcmp("\r", line) == 0) { continue; }
 
-        for(m = 0; line[m]; m++)
-        {
-            // By counting spaces, you can get a rough estimate of how many words
-            // are in each line. (totalSpaces + 1)
-            if ((line[m] == ' ') && (line[m-1] != ' '))
-            {
-                 wordCount++;
-            }
+        // Get character count of the line
+        int charcount = countCharsAndStripNewline(line);
 
-            if(line[m] != '\n')
-            {
-                charcount++;
-            }
-            else
-            {
-                line[m] = '\0';
-            }
-        }
-
-        // Update word total
-        *numOfWords += wordCount;
-
-        // Create hash structure
-        struct HashWords HashWord;
+        // Get word count of the line
+        int wordCount = countWordsInLine(line);
 
         if (DEBUG == true)
         {
             fprintf(stdout, "line %d:\n", lineCount);
             fprintf(stdout, "  words in line: %d\n", wordCount);
-            fprintf(stdout, "  total words: %d\n", *numOfWords);
             fprintf(stdout, "  charcount: %d\n", charcount);
             fprintf(stdout, "  lineIdx: %d\n", *lineIdx);
             fprintf(stdout, "  value: \"%s\"\n\n", line);
         }
 
-        // Get word
+        // Get words from line and hash the word
+        unsigned long key = 0;
         while (*lineIdx < (charcount - 1))
         {
-            // Sanitize word
-            for (int i = 0; i < 50; i++)
-            {
-                word[i] = '\0';
-            }
-
+            sanitizeWord(word);
             getWord(line, lineIdx, word);
-            unsigned long hash_output = hash(word);
+            setItem(hashtable, word);
+            key = hash(hashtable->size, word);
 
-            strcpy(HashWord.word, word);
-            HashWord.key = hash_output;
+            //key = hash(word);
+            //ht_set(hashtable, key, word);
 
             if (DEBUG == true)
             {
-                fprintf(stdout, "getWord(): %8s,\t", HashWord.word);
-                fprintf(stdout, "hash(): %10d,\t", HashWord.key);
-                fprintf(stdout, "lineIdx: %2d\n", *lineIdx);
+                fprintf(stdout, "key: %lu\n", key);
+                fprintf(stdout, "  value: %s\n", getValue(hashtable, key));
+                fprintf(stdout, "  count: %3d\n", getCount(hashtable, key));
+                fprintf(stdout, "  lineIdx: %2d\n", *lineIdx);
             }
-        }
-
-        if (DEBUG == true) { fprintf(stdout, "\n========\n\n"); }
+        } // End while for word
 
         // Reset line index to 0 for new line
         *lineIdx = 0;
         lineCount++;
-    }
+
+        if (DEBUG == true) { fprintf(stdout, "\n========\n\n"); }
+    } // End while for line
 
     // Free pointers
-    free(lineIdx);
     free(word);
+    free(lineIdx);
+
+    if (DEBUG == true) { if (feof(textFp)) { fprintf(stderr, "Reached FEOF.\n"); } }
 }
 
 
@@ -293,10 +340,19 @@ int main (int argc, char* argv[])
         fprintf(stdout, "================================================================================\n");
     }
 
-    // Process text file for zipfs law and hashing
-    int* wordTotal = (int*) malloc(sizeof(int));
-    *wordTotal = 0;
-    processFile(fp, wordTotal);
+    // Get rough estimate of total words in text file (many could be duplicate)
+    // This will give a good approximation of the hash table size
+    int totalWords = 0;
+    totalWords = countWords(fp);
+
+    // Rewind pointer so we can process file
+    rewind(fp);
+
+    // Create hashtable
+    hashtable_t* hashtable = createTable(HASHTABLE_SIZE);
+
+    // Process file
+    processFile(fp, hashtable);
 
     // Close file pointer
     if (fclose(fp) != 0)
@@ -305,11 +361,9 @@ int main (int argc, char* argv[])
     }
 
     if (DEBUG == true) { fprintf(stdout, "File closed.\n"); }
-
     if (DEBUG == true)
     {
         fprintf(stdout, "================================================================================\n");
-
         fprintf(stdout, "\n");
     }
 
@@ -322,14 +376,39 @@ int main (int argc, char* argv[])
     fprintf(stdout, "+           Zipfs Output Below        +\n");
     fprintf(stdout, "+++++++++++++++++++++++++++++++++++++++\n\n");
 
-    fprintf(stdout, "Total Number of Words: %d\n", *wordTotal);
+    fprintf(stdout, "Total Number of Words: %d\n", totalWords);
+
+    // Display hashtable
+    printf("\nPrinted Hash:\n");
+    for (int i = 0; i < HASHTABLE_SIZE; i++)
+    {
+        if (hashtable->entry[i] != NULL)
+        {
+            printf("  value: %25s,\t", hashtable->entry[i]->value);
+            printf("hash: %10lu,\t", hashtable->entry[i]->key);
+            printf("count: %d\n", hashtable->entry[i]->count);
+        }
+    }
+
+    // Visualize with +'s
+    /*for (int i = 0; i < HASHTABLE_SIZE; i++)
+    {
+        if (hashtable->entry[i] != NULL)
+        {
+            printf("%20s:\t", hashtable->entry[i]->value);
+            for (int j = 0; j < hashtable->entry[i]->count; j++)
+              printf("+");
+            printf("\n");
+        }
+    }*/
 
 
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   //        FREE ALL MEMORY THAT HASN'T BEEN FREED YET
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    free(wordTotal);
+    deleteTable(hashtable);
+    free(hashtable);
 
     exit(0);
 }
