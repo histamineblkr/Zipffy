@@ -14,13 +14,13 @@ Program doesn't need installation.
 ### Make ###
 Compile yourself and run from the **dist/** folder:
 
-    cd Zippfy
+    cd Zipffy
     make
-    dist/zippfy file.txt
+    dist/zipffy file.txt
 
 Alternatively you can run in a debug mode:
 
-    dist/zippfy file.txt -d
+    dist/zipffy file.txt -d
 
 ## Features ##
 - Reads in a text file
