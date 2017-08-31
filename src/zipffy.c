@@ -34,18 +34,8 @@ bool DEBUG = false;
 static const int WORD_SIZE = 50;
 static const int LINE_SIZE = 1024;
 static const int MSG_SIZE = 1024;
-static const int HASHTABLE_SIZE = 1300051;
+static const int HASHTABLE_SIZE = 8831;
 
-/*
- * A structure to hold each work, its hash key, and count.
- *
- */
-/*struct HashWords
-{
-    char value[50];
-    int key;
-    int count;
-};*/
 
 /*
  * Quick and dirty check for file passed in ending in .txt
@@ -203,13 +193,11 @@ static bool getWord(char* line, int* idx, char* word)
 static void processFile(FILE* textFp, hashtable_t* hashtable)
 {
     char line[LINE_SIZE];
-    //unsigned char word[WORD_SIZE];
     char* word = malloc(sizeof(char) * 50);
     int* lineIdx = (int*) malloc(sizeof(int));
     int lineCount = 1;
 
     // Intialize memory for char arrays
-    //memset(word, '\0', (WORD_SIZE * sizeof(unsigned char)));
     strcpy(word, "");
 
     // Set the line index to keep track of the line
@@ -247,14 +235,11 @@ static void processFile(FILE* textFp, hashtable_t* hashtable)
             setItem(hashtable, word);
             key = hash(hashtable->size, word);
 
-            //key = hash(word);
-            //ht_set(hashtable, key, word);
-
             if (DEBUG == true)
             {
                 fprintf(stdout, "key: %lu\n", key);
-                fprintf(stdout, "  value: %s\n", getValue(hashtable, key));
-                fprintf(stdout, "  count: %3d\n", getCount(hashtable, key));
+                fprintf(stdout, "  value: %s\n", word);
+                fprintf(stdout, "  count: %3d\n", getCount(hashtable, word));
                 fprintf(stdout, "  lineIdx: %2d\n", *lineIdx);
             }
         } // End while for word
@@ -384,9 +369,17 @@ int main (int argc, char* argv[])
     {
         if (hashtable->entry[i] != NULL)
         {
-            printf("  value: %25s,\t", hashtable->entry[i]->value);
-            printf("hash: %10lu,\t", hashtable->entry[i]->key);
-            printf("count: %d\n", hashtable->entry[i]->count);
+            entry_t* currentItem = hashtable->entry[i];
+            entry_t* nextItem = NULL;
+
+            while (currentItem != NULL)
+            {
+                nextItem = currentItem->nextItem;
+                printf("  value: %25s,\t", currentItem->value);
+                printf("hash: %10lu,\t", currentItem->key);
+                printf("count: %d\n", currentItem->count);
+                currentItem = nextItem;
+            }
         }
     }
 

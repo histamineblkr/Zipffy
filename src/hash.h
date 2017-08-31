@@ -15,7 +15,7 @@ struct entry_s
   	unsigned long key;
   	char *value;
     int count;
-  	struct entry_s *currentItem;
+  	struct entry_s *nextItem;
 };
 
 typedef struct hashtable_s hashtable_t;
@@ -30,8 +30,8 @@ entry_t* createItem(unsigned long key, char *value);
 
 unsigned long hash(int hashtableSize, char* word);
 bool setItem(hashtable_t* hashtable, char* value);
-char* getValue(hashtable_t* hashtable, unsigned long key);
-int getCount(hashtable_t* hashtable, unsigned long key);
+int getCount(hashtable_t* hashtable, char* value);
+unsigned long getKey(hashtable_t* hashtable, char* value);
 void deleteTable(hashtable_t* hashtable);
 
 #endif // HASH_H_
