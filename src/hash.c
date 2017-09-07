@@ -41,14 +41,14 @@ hashtable_t* createTable(int size)
 /* Create a key-value entryItem */
 entry_t* createItem(unsigned long key, char *value)
 {
-    entry_t *newItem;
+    entry_t* newItem = NULL;
 
     if ((newItem = malloc(sizeof(entry_t))) == NULL) { return NULL; }
 
     if (!(newItem->key = key)) { return NULL;	}
 
     if ((newItem->value = strdup(value)) == NULL) { return NULL; }
-    
+
     newItem->nextItem = NULL;
     newItem->count = 1;
 
@@ -186,8 +186,8 @@ void deleteTable(hashtable_t* hashtable)
         {
             if (currentItem->nextItem == NULL)
             {
-                currentItem->value = NULL;
                 free(currentItem->value);
+                currentItem->value = NULL;
             }
             else
             {
@@ -197,12 +197,12 @@ void deleteTable(hashtable_t* hashtable)
                     nextItem = currentItem->nextItem;
                     free(currentItem->value);
                     free(currentItem);
-                    //free(currentItem->nextItem);
                     currentItem = nextItem;
+                    nextItem = NULL;
                 }
             }
         }
-        currentItem = NULL;
+        free(currentItem);
     }
     free(hashtable->entry);
 }
