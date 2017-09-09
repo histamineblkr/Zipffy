@@ -363,6 +363,27 @@ int main (int argc, char* argv[])
 
     fprintf(stdout, "Total Number of Words: %d\n", totalWords);
 
+    int totalUniqueWords = 0;
+    for (int i = 0; i < HASHTABLE_SIZE; i++)
+    {
+        if (hashtable->entry[i] != NULL)
+        {
+            totalUniqueWords++;
+
+            entry_t* currentItem = hashtable->entry[i];
+            entry_t* nextItem = NULL;
+
+            while (currentItem->nextItem != NULL)
+            {
+                nextItem = currentItem->nextItem;
+                currentItem = nextItem;
+                totalUniqueWords++;
+            }
+        }
+    }
+
+    fprintf(stdout, "Total Number of Unique Words: %d\n", totalUniqueWords);
+
     // Display hashtable
     printf("\nPrinted Hash:\n");
     for (int i = 0; i < HASHTABLE_SIZE; i++)
