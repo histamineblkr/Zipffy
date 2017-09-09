@@ -363,6 +363,7 @@ int main (int argc, char* argv[])
 
     fprintf(stdout, "Total Number of Words: %d\n", totalWords);
 
+    // A loose count of unique words
     int totalUniqueWords = 0;
     for (int i = 0; i < HASHTABLE_SIZE; i++)
     {
@@ -381,7 +382,6 @@ int main (int argc, char* argv[])
             }
         }
     }
-
     fprintf(stdout, "Total Number of Unique Words: %d\n", totalUniqueWords);
 
     // Display hashtable
