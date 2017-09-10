@@ -27,6 +27,8 @@ Alternatively you can run in a debug mode:
 - Displays Zipf's Law visually
 
 ## Considerations ##
+- This project decides to use Mersenne Primes (5 through 9) which is:
+    - 8191 to 2305843009213693951, any text with a larger word count than that seems a bit too much. Also, that takes into consideration the LONG_MAX for a long int set in the limits.h.
 - Uses the djb2 hash [here](http://www.cse.yorku.ca/~oz/hash.html)
 - Assumes English language and longest word is: "pneumonoultramicroscopicsilicovolcanoconiosis" (46 Characters)
 - How to handle contractions: i.e. "it's"?

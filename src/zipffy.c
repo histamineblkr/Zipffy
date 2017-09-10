@@ -34,7 +34,13 @@ bool DEBUG = false;
 static const int WORD_SIZE = 50;
 static const int LINE_SIZE = 1024;
 static const int MSG_SIZE = 1024;
-static const int HASHTABLE_SIZE = 8831;
+
+// Mersenne Primes
+static const long int MERSENNE_5 = 8191;
+static const long int MERSENNE_6 = 131071;
+static const long int MERSENNE_7 = 524287;
+static const long int MERSENNE_8 = 2147483647;
+static const long int MERSENNE_9 = 2305843009213693951;
 
 
 /*
@@ -153,8 +159,6 @@ static void sanitizeWord(char* word)
  * back
  *
  * @returns: a boolean of true when word is built
- *
- * TODO: Find issue in here causing memory error
  */
 static bool getWord(char* line, int* idx, char* word)
 {
@@ -330,11 +334,47 @@ int main (int argc, char* argv[])
     int totalWords = 0;
     totalWords = countWords(fp);
 
+    // Choose an appropriate hashtable size based on the Mersenne Primes
+    long int HASHTABLE_SIZE = 0;
+    if (totalWords < MERSENNE_5)
+    {
+        HASHTABLE_SIZE = MERSENNE_5;
+    }
+    else if (totalWords > MERSENNE_5 && totalWords < MERSENNE_6)
+    {
+        HASHTABLE_SIZE = MERSENNE_6;
+    }
+    else if (totalWords > MERSENNE_6 && totalWords < MERSENNE_7)
+    {
+        HASHTABLE_SIZE = MERSENNE_7;
+    }
+    else if (totalWords > MERSENNE_7 && totalWords < MERSENNE_8)
+    {
+        HASHTABLE_SIZE = MERSENNE_8;
+    }
+    else if (totalWords > MERSENNE_8 && totalWords < MERSENNE_9)
+    {
+        HASHTABLE_SIZE = MERSENNE_9;
+    }
+    else
+    {
+        // What the hell kind of text file are you using?!
+        fprintf(stderr, "ERROR: Your text file is way too large. Exiting.\n");
+        exit(1);
+    }
+
     // Rewind pointer so we can process file
     rewind(fp);
 
     // Create hashtable
     hashtable_t* hashtable = createTable(HASHTABLE_SIZE);
+
+    // Hashtable error so abort
+    if (hashtable == NULL)
+    {
+        fprintf(stderr, "ERROR: A hashtable creation error occured. Exiting.\n");
+        exit(1);
+    }
 
     // Process file
     processFile(fp, hashtable);

@@ -21,14 +21,14 @@ struct entry_s
 typedef struct hashtable_s hashtable_t;
 struct hashtable_s
 {
-  	int size;
+  	long size;
   	struct entry_s **entry;
 };
 
-hashtable_t* createTable(int size);
+hashtable_t* createTable(long size);
 entry_t* createItem(unsigned long key, char *value);
 
-unsigned long hash(int hashtableSize, char* word);
+unsigned long hash(long hashtableSize, char* word);
 bool setItem(hashtable_t* hashtable, char* value);
 int getCount(hashtable_t* hashtable, char* value);
 unsigned long getKey(hashtable_t* hashtable, char* value);

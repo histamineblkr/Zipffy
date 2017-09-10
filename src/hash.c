@@ -1,7 +1,7 @@
 #include "hash.h"
 
 /* Hashing function (dbj2) */
-unsigned long hash(int hashtableSize, char* word)
+unsigned long hash(long hashtableSize, char* word)
 {
     if (word == NULL) { return -1; }
 
@@ -18,11 +18,11 @@ unsigned long hash(int hashtableSize, char* word)
 }
 
 /* Create a new hashtable */
-hashtable_t* createTable(int size)
+hashtable_t* createTable(long size)
 {
   	hashtable_t* hashtable = NULL;
 
-  	if (size < 1) return NULL;
+  	if (size < 1) { return NULL; }
 
   	// Allocate the table itself
   	if ((hashtable = malloc(sizeof(hashtable_t))) == NULL) { return NULL; }
