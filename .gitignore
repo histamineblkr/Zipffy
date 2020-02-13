@@ -36,6 +36,8 @@
 *.x86_64
 *.hex
 dist/*
+!dist/.gitkeep
+!obj/.gitkeep
 
 # Test files
 test/*
